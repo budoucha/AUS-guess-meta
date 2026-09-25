@@ -12,7 +12,7 @@ main{max-width:860px;margin:auto;padding:24px 16px 48px}h1{font-size:clamp(1.35r
 .top{display:flex;gap:12px;align-items:end;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}.regions{display:flex;gap:6px;flex-wrap:wrap}.chip{border:1px solid var(--border);border-radius:999px;padding:4px 8px;font-size:.78rem}
 .controls{display:flex;gap:8px;align-items:end;flex-wrap:wrap}label{font-size:.9rem}select,button{font:inherit;min-height:44px;border:1px solid var(--border);border-radius:10px;padding:8px 12px;background:var(--card);color:var(--text)}
 #next{background:var(--accent2);font-weight:700;cursor:pointer}.card{width:100%;text-align:left;padding:16px;border:1px solid var(--border);border-radius:18px;background:var(--card);cursor:pointer}
-.hint{border:1px solid var(--border);border-radius:12px;padding:13px;margin:0 0 10px}.hint:last-child{margin-bottom:0}.meta{font-size:.76rem;color:var(--muted);margin-bottom:4px}.hinttext{font-weight:650;line-height:1.55}.detail{display:none;border-top:1px solid var(--border);margin-top:10px;padding-top:10px;color:var(--muted);font-size:.9rem;line-height:1.55}.answer{display:none;border-top:1px solid var(--border);margin-top:16px;padding-top:16px}.answerRegions{display:flex;gap:8px;flex-wrap:wrap}.answerChip{background:var(--accent2);border-radius:10px;padding:9px 12px;font-weight:700}.reveal{text-align:center;color:var(--muted);font-size:.9rem;border-top:1px solid var(--border);margin-top:16px;padding-top:14px}.note{color:var(--muted);font-size:.78rem;line-height:1.5;margin-top:10px}
+.hint{border:1px solid var(--border);border-radius:12px;padding:13px;margin:0 0 10px}.hint:last-child{margin-bottom:0}.meta{font-size:.76rem;color:var(--muted);margin-bottom:4px}.hinttext{font-weight:650;line-height:1.55}.detail{display:none;border-top:1px solid var(--border);margin-top:10px;padding-top:10px;color:var(--muted);font-size:.9rem;line-height:1.55}.answer{display:none;border-top:1px solid var(--border);margin-top:16px;padding-top:16px}.answerRegions{display:flex;gap:8px;flex-wrap:wrap}.answerChip{background:var(--accent2);border-radius:10px;padding:9px 12px;font-weight:700}.reveal{text-align:center;color:var(--muted);font-size:.9rem;border-top:1px solid var(--border);margin-top:16px;padding-top:14px}.note{color:var(--muted);font-size:.78rem;line-height:1.5;margin-top:10px}.repo-link{display:inline-block;margin-top:12px;color:var(--muted);font-size:.8rem}
 body.revealed .detail,body.revealed .answer{display:block}body.revealed .reveal{display:none}
 @media(max-width:520px){main{padding-top:16px}.controls{width:100%}.controls label{flex:1}.controls select{width:100%}#next{flex:1}}
 </style>
@@ -36,6 +36,7 @@ body.revealed .detail,body.revealed .answer{display:block}body.revealed .reveal{
   <div id="answer" class="answer" aria-live="polite"></div>
 </button>
 <p class="note">候補の積集合が0になる問題は出ない。複数地域に該当する組み合わせは複数解として表示する。地域限定・典型・例外情報は回答後に表示。</p>
+<a class="repo-link" href="https://github.com/budoucha/AUS-guess-meta" target="_blank" rel="noopener noreferrer">Github</a>
 </main>
 <script>
 const names={NSW:"New South Wales",VIC:"Victoria",QLD:"Queensland",SA:"South Australia",WA:"Western Australia",TAS:"Tasmania",NT:"Northern Territory",ACT:"Australian Capital Territory"};
