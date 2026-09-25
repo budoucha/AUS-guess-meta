@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>オーストラリア地域メタクイズ</title>
+<style>
+:root{color-scheme:light dark;--bg:#f6f7f9;--card:#fff;--text:#18212f;--muted:#68707d;--border:#d9dde3;--accent:#67d5c4;--accent2:#dff7f2}
+@media(prefers-color-scheme:dark){:root{--bg:#11161e;--card:#18212f;--text:#eef3f6;--muted:#a6b0bb;--border:#344050;--accent2:#183b39}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:860px;margin:auto;padding:24px 16px 48px}h1{font-size:clamp(1.35rem,4vw,2rem);margin:0 0 4px}.sub{color:var(--muted);margin:0 0 18px}
+.top{display:flex;gap:12px;align-items:end;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}.regions{display:flex;gap:6px;flex-wrap:wrap}.chip{border:1px solid var(--border);border-radius:999px;padding:4px 8px;font-size:.78rem}
+.controls{display:flex;gap:8px;align-items:end;flex-wrap:wrap}label{font-size:.9rem}select,button{font:inherit;min-height:44px;border:1px solid var(--border);border-radius:10px;padding:8px 12px;background:var(--card);color:var(--text)}
+#next{background:var(--accent2);font-weight:700;cursor:pointer}.card{width:100%;text-align:left;padding:16px;border:1px solid var(--border);border-radius:18px;background:var(--card);cursor:pointer}
+.hint{border:1px solid var(--border);border-radius:12px;padding:13px;margin:0 0 10px}.hint:last-child{margin-bottom:0}.meta{font-size:.76rem;color:var(--muted);margin-bottom:4px}.hinttext{font-weight:650;line-height:1.55}.detail{display:none;border-top:1px solid var(--border);margin-top:10px;padding-top:10px;color:var(--muted);font-size:.9rem;line-height:1.55}.answer{display:none;border-top:1px solid var(--border);margin-top:16px;padding-top:16px}.answerRegions{display:flex;gap:8px;flex-wrap:wrap}.answerChip{background:var(--accent2);border-radius:10px;padding:9px 12px;font-weight:700}.reveal{text-align:center;color:var(--muted);font-size:.9rem;border-top:1px solid var(--border);margin-top:16px;padding-top:14px}.note{color:var(--muted);font-size:.78rem;line-height:1.5;margin-top:10px}
+body.revealed .detail,body.revealed .answer{display:block}body.revealed .reveal{display:none}
+@media(max-width:520px){main{padding-top:16px}.controls{width:100%}.controls label{flex:1}.controls select{width:100%}#next{flex:1}}
+</style>
+</head>
+<body>
+<main>
+<h1>オーストラリア地域メタクイズ</h1>
+<p class="sub">見えた特徴の組み合わせから州・準州を絞る</p>
+<div class="top">
+  <div class="regions"><span class="chip">NSW</span><span class="chip">VIC</span><span class="chip">QLD</span><span class="chip">SA</span><span class="chip">WA</span><span class="chip">TAS</span><span class="chip">NT</span><span class="chip">ACT</span></div>
+  <div class="controls">
+    <label>ヒント数
+      <select id="count"><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option></select>
+    </label>
+    <button id="next" type="button">次の問題</button>
+  </div>
+</div>
+<button id="card" class="card" type="button" aria-expanded="false">
+  <div id="hints"></div>
+  <div id="reveal" class="reveal">タップ / クリックで回答を表示</div>
+  <div id="answer" class="answer" aria-live="polite"></div>
+</button>
+<p class="note">候補の積集合が0になる問題は出ない。複数地域に該当する組み合わせは複数解として表示する。地域限定・典型・例外情報は回答後に表示。</p>
+</main>
+<script>
+const names={NSW:"New South Wales",VIC:"Victoria",QLD:"Queensland",SA:"South Australia",WA:"Western Australia",TAS:"Tasmania",NT:"Northern Territory",ACT:"Australian Capital Territory"};
+const allRegions=Object.keys(names);
+const H=[
+["標識支柱","道路標識の支柱が黄色",["WA"],"WA全域で非常に強い。SAの黄色いバス停支柱とは別。"],
+["標識支柱","標識支柱が丸パイプではなく平たい板状",["WA","SA"],"WAでは黄色いことが多い。"],
+["標識支柱","標識支柱に黄色いステッカー",["NT"],"黄色い支柱そのものではなくステッカー。"],
+["標識","道路標識に蛍光色の縁取り",["QLD"],"QLDのかなり強いメタ。"],
+["標識","真っ赤な NO STOPPING 標識",["NSW"],"NSW固有級。都市ならSydney候補が強くなる。"],
+["標識","白地で NO STOPPING / NO PARKING の文字が明記される",["ACT"],"ACTで特徴的な形式。"],
+["標識","小規模道路の方向案内標識が白地",["TAS"],"豪州ではTasmaniaで特徴的。"],
+["道路番号","C番号の道路",["VIC","TAS","SA"],"基本はVIC/TAS。SAはVictoria州境近くの東端に少数。"],
+["速度標識","スクールゾーンが25 km/h",["SA"],"SAを強く示す。"],
+["速度標識","130 km/h の制限速度標識",["NT"],"豪州で130 km/hが存在するのはNT。"],
+["標識","細身の KEEP LEFT 標識で矢印なし",["NSW","QLD","NT"],"この3地域への絞り込みに使える。"],
+["信号機","信号機の黒い筐体の外周に白い縁",["WA","QLD","NSW","ACT","TAS"],"州確定ではなくグループ分け用。"],
+["信号機","信号機に白い外周線がない",["SA","VIC","NT"],"SA・Victoria・NTのグループ。"],
+["道路線","路肩線が周期的に途切れ、その隙間に反射板がある",["ACT"],"ACTの非常に強い道路メタ。"],
+["道路線","路肩線が周期的に途切れるが、隙間に反射板がほぼない",["SA"],"ACTとの比較に有効。SAでも例外的に反射板が入る場合あり。"],
+["道路線","センターラインが3本の破線",["NSW"],"Sturt HwyやGwydir Hwyなどで典型。"],
+["道路線","高山道路で道路線が全面的に黄色系",["NSW","VIC"],"Snowy MountainsやVictoria高地。"],
+["ガードレール","ガードレール末端に黄地＋黒い横棒",["NSW","ACT"],"ほぼNSW・ACT。"],
+["電柱","両側が鋼材、中央がコンクリートの複合電柱",["SA","TAS","NSW"],"Stobie pole。圧倒的にSAが典型だがTasmaniaやBroken Hillにも例外あり。"],
+["電柱","複合電柱に三叉・横向きE字型のポールトップ",["SA"],"Stobie poleと組み合わされるSAメタ。"],
+["電柱","錆色の金属柱に縦方向の穴が多数空いている",["NT","WA"],"NT最重要メタの一つ。WA北端Wyndham周辺に例外。"],
+["電柱","コンクリート製電柱が目立って多い",["VIC"],"豪州ではVictoriaで特に多い。単独確定より補助向き。"],
+["ポールトップ","3本すべての碍子が同じ横棒に付く三叉型",["WA","VIC"],"中央碍子も横棒に接続。"],
+["ポールトップ","両端の碍子・アームが上向きに傾く",["QLD"],"Queenslandの特徴的ポールトップ。"],
+["ポールトップ","左右に丸い碍子、中央上に縦向き丸碍子",["VIC"],"Victoriaの典型型。"],
+["ポールトップ","薄い金属横棒が90°に折られ断面がL字状",["TAS"],"Tasmaniaで特徴的。"],
+["電柱マーキング","電柱に青い丸ステッカー",["QLD"],"色褪せで青が分かりにくい場合あり。"],
+["電柱マーキング","電柱に黒い四角・帯状の塗装やマーキング",["QLD"],"Queenslandの強い補助メタ。"],
+["電柱マーキング","電柱に数字が斜めに並ぶ",["QLD"],"特に南東部、Brisbane～Sunshine Coast周辺で目立つ。"],
+["電柱設備","くすんだ緑・オリーブ色のポッサムガード",["TAS"],"Tasmania最重要メタ。ガード自体ではなく色が重要。"],
+["電柱マーキング","電柱の根元が緑色に塗られている",["WA"],"WAで頻出。"],
+["電柱マーキング","電柱に赤白の帯",["WA"],"WAの補助メタ。"],
+["電柱マーキング","白長方形ステッカーの中に青い小四角",["VIC"],"特にMelbourne周辺で有用。"],
+["ボラード","短い赤反射板の標準的な豪州ボラードが多い",["QLD","SA"],"全豪に存在するがQLD・SAで頻度が高い。"],
+["ボラード","白ボラードの下部が広く黒茶色・茶色",["WA"],"WAの強いメタ。"],
+["ボラード","黒白の斜め縞ボラード",["WA"],"WA固有級。"],
+["ボラード","黒黄の縞ボラード",["QLD"],"QLD固有級。"],
+["地番標識","道路脇のproperty marker / 地番標識が濃緑",["WA"],"地方道路で有効。"],
+["地番標識","道路脇のproperty marker / 地番標識が白",["SA"],"WAの緑との対比。"],
+["消火栓","白い消火栓標柱に青丸、上部が赤い",["VIC"],"Victoria固有級。"],
+["消火栓","消火栓設備の頭だけ赤く塗られている",["VIC"],"Victoriaで特徴的。"],
+["縁石","縁石が道路へ向かって斜めになだらかに落ちる",["WA"],"特にPerth周辺の都市メタ。完全限定ではない。"],
+["ナンバープレート","黄色いナンバープレートの車が複数いる",["NSW"],"伝統的NSWメタ。白黒プレートも増えているので複数台確認推奨。"],
+["ナンバープレート","白プレートに赤・マルーン系の文字が多い",["QLD"],"ぼかし越しでも赤茶色に見えることがある。"],
+["ナンバープレート","白プレート上辺に青い帯が見える",["WA"],"WAの典型デザイン。"],
+["ナンバープレート","プレート全体の赤味がかなり強い",["NT"],"QLDより赤が目立つ傾向。プレート単独では補助扱い。"],
+["ナンバープレート","白黒系で色味に乏しいプレートが多い",["SA"],"特徴色が弱いので他メタとの併用推奨。"],
+["電話番号","固定電話の市外局番が02",["NSW","ACT"],"04始まりは携帯なので地域判定には使えない。"],
+["電話番号","固定電話の市外局番が03",["VIC","TAS"],"Victoria・Tasmania。"],
+["電話番号","固定電話の市外局番が07",["QLD"],"固定電話ならQueenslandに絞れる。"],
+["電話番号","固定電話の市外局番が08",["SA","WA","NT"],"西～中央3地域。追加ヒントが必要。"],
+["公共交通","バス停に Metro 表記",["TAS"],"Hobart・Launceston・Burnieなどで有力。"],
+["公共交通","大きなコンクリート製バスシェルター",["NT"],"Darwinの典型的なバス停。"],
+["公共交通","オレンジ系バス停や PTV 表記",["VIC"],"PTV = Public Transport Victoria。特にMelbourne。"],
+["公共交通","大都市でトラム線が非常に発達し、PTV設備も見える",["VIC"],"Melbourneを強く示す。トラム単独ならAdelaideにもある。"],
+["建築","高床式木造住宅＋広いベランダが多い",["QLD"],"Queenslander様式。特に沿岸部・南東～中北部。"],
+["土壌","都市部でも赤橙色の土がよく露出する",["WA"],"特にPerth周辺で有用。内陸豪州一般の赤土とは区別。"],
+["植生・土壌","低いブッシュ状植生が多く、赤橙色の土",["WA"],"WA南西部の典型的な組み合わせ。"],
+["植生・土壌","濃い赤土＋鮮やかな緑草＋黒っぽい樹幹の疎林",["NT"],"Darwin周辺・Top Endで非常に特徴的。"],
+["動植物","道路脇にシロアリ塚が多数ある",["NT","WA","QLD"],"NTが最も典型。WA北部・QLD北部にもある。"],
+["植生","乾燥地から北へ進むほど木が高く密になる",["NT"],"Stuart HwyでAlice SpringsからDarwin方向へ進む際の傾向。"],
+["地形","町の背後や道路正面にオレンジ色の岩山が迫る",["NT"],"Alice Springs周辺のMacDonnell Rangesが代表。"],
+["地形・土壌","赤土＋岩だらけの丘＋鉱山町らしい乾燥景観",["WA"],"Pilbara、特にTom Price周辺を強く示す。"],
+["地形・植生","極端に平坦で樹木がほぼなく、低い灌木だけ",["SA","WA"],"Nullarborの典型。"],
+["植生・土壌","乾燥灌木＋横に広いユーカリ＋橙色の砂質土",["SA","WA"],"Nullarbor周辺の広域景観帯。西へ行くほど赤くなる傾向。"],
+["植生・土壌","白っぽい土＋乾燥農地・ユーカリのMallee景観",["SA","VIC"],"Adelaide東方～Victoria北西部。Mildura周辺では赤土化。"],
+["農業景観","緑～黄金色の大規模農地が延々続く",["SA","VIC"],"Yorke Peninsula南部～SA南東部～Victoria北部。"],
+["農林業","白っぽい土＋大規模な松林・人工林",["SA"],"Mount Gambier周辺で特徴的。"],
+["植生・土壌","低い茂み＋ずんぐりした低いユーカリ＋橙色土",["SA"],"Kangaroo Islandで特徴的。WAっぽく見えることがある。"],
+["地形","広大な平坦農地から孤立した険しい山塊が立ち上がる",["VIC"],"Victoria西部Grampiansの典型。"],
+["地形","平原から孤立した細長い山脈が立ち上がる",["WA"],"WA南西部Stirling Rangeが代表。"],
+["気候・植生","冷涼・湿潤で、緑の起伏と濃いユーカリ林",["TAS"],"Tasmaniaらしい景観。Victoria南部・高地との混同注意。"],
+["植生","熱帯雨林・ヤシ・濃緑植生が非常に強い",["QLD"],"Queensland北部沿岸、Cairns～Townsville方面。"],
+["農業景観","サトウキビ畑が大量に見える",["QLD","NSW"],"QLD北部沿岸中心。QLD南部～NSW北部にも存在。"],
+["植生","巨大な扇形葉のFan Palmが目立つ",["QLD"],"北東部Wet Tropics、特にCairns～Mission Beach周辺。"],
+["植生","幹が瓶状に太ったBottle Tree",["QLD"],"南東～中部内陸、特にRoma周辺。"],
+["都市地形","熱帯都市で、大きな緑の山が市街地のすぐ背後に迫る",["QLD"],"Cairnsを強く示す。"],
+["都市地形","熱帯寄りだが比較的平坦で、大きな分離道路が多い",["QLD"],"Mackay候補。都市vibeなので補助扱い。"],
+["植生・土壌","内陸へ行くほど赤土・平坦・乾いた淡緑色低木が増える",["NSW"],"NSW西部の基本景観。"],
+["都市景観","街が非常に広々として低密度、しかも平坦",["WA"],"Perth候補。黄色支柱や赤土と併用すると強い。"],
+["都市地形","坂が多く、山が市街地のすぐ近くに見える冷涼都市",["TAS"],"Hobart候補。"],
+["都市複合","黒マーキング電柱＋亜熱帯～熱帯の大都市景観",["QLD"],"Brisbane / SE Queenslandで特に有用。"],
+["都市複合","赤いNO STOPPING＋黄色プレート多数＋大都市",["NSW"],"Sydneyにかなり寄る複合ヒント。"],
+["都市複合","複合鋼材・コンクリート電柱が住宅街に大量",["SA"],"都市ならAdelaideの可能性が非常に高い。"],
+["都市複合","コンクリート柱＋Victoria型ポールトップ＋青四角ステッカー",["VIC"],"Melbourneで非常に強い複合ヒント。"],
+["Google Car","車体左側にワイヤー状のものが映る",["NT","QLD"],"Barkly HwyのNT区間大半＋QLD西端の一部。道路単位のメタ。"],
+["Google Car","シュノーケル付き特殊Google car",["NSW","ACT","WA"],"大半はNSW・ACT。WAに少数例外。"],
+["カバレッジ","Gen2ではないことが確認できる",["NT"],"NTにはGen2がないという排除メタ。他州でもGen3/4は普通なので単独では弱い。"],
+["道路・景観","オレンジ土＋低木＋乾燥景観の長大な南北幹線",["NT","SA"],"Stuart Hwy。NT側は路肩ランブルストリップが少ない傾向。"],
+["道路・景観","熱帯北部の舗装路なのに道路線がない",["NT"],"Dorat Road / Route 23周辺が代表。"],
+["例外メタ","Stobie poleがあるのに、SAらしくない乾燥内陸の鉱山都市",["NSW"],"Broken Hillの有名な例外。"]
+].map(([c,t,r,n])=>({c,t,r,n}));
+const countEl=document.getElementById("count"),nextBtn=document.getElementById("next"),card=document.getElementById("card"),hintsEl=document.getElementById("hints"),answerEl=document.getElementById("answer");
+let current=[],revealed=false;
+function intersection(rows){return allRegions.filter(x=>rows.every(h=>h.r.includes(x)))}
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
+function pickQuestion(n){
+ const eligible=allRegions.filter(reg=>new Set(H.filter(h=>h.r.includes(reg)).map(h=>h.c)).size>=n);
+ const target=eligible[Math.floor(Math.random()*eligible.length)],candidates=H.filter(h=>h.r.includes(target));
+ let best=null,bestScore=999;
+ for(let attempt=0;attempt<160;attempt++){
+  const rows=[],cats=new Set(),order=shuffle(candidates);
+  while(rows.length<n){
+   const opts=order.filter(h=>!rows.includes(h)&&!cats.has(h.c));if(!opts.length)break;
+   let min=999,pool=[];
+   for(const h of opts){const s=intersection(rows.concat(h)).length;if(s<min){min=s;pool=[h]}else if(s===min)pool.push(h)}
+   const chosen=pool[Math.floor(Math.random()*pool.length)];rows.push(chosen);cats.add(chosen.c)
+  }
+  if(rows.length!==n)continue;const inter=intersection(rows);if(!inter.length)continue;
+  const score=inter.length+rows.reduce((s,h)=>s+h.r.length,0)/100+Math.random()*.02;
+  if(score<bestScore){bestScore=score;best=rows.slice()}if(inter.length===1&&attempt>20)break
+ }
+ return best||shuffle(candidates).slice(0,n)
+}
+function chips(regs){return regs.map(r=>'<span class="chip"><b>'+r+'</b> '+names[r]+'</span>').join(" ")}
+function renderQuestion(){
+ document.body.classList.remove("revealed");revealed=false;card.setAttribute("aria-expanded","false");
+ const n=Math.max(2,Math.min(4,Number(countEl.value)||3));current=pickQuestion(n);
+ hintsEl.innerHTML=current.map((h,i)=>'<div class="hint"><div class="meta">ヒント '+(i+1)+' · '+h.c+'</div><div class="hinttext">'+h.t+'</div><div class="detail"><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:7px">'+chips(h.r)+'</div>'+h.n+'</div></div>').join("");
+ answerEl.innerHTML=""
+}
+function reveal(){
+ if(revealed)return;revealed=true;document.body.classList.add("revealed");card.setAttribute("aria-expanded","true");
+ const ans=intersection(current);
+ answerEl.innerHTML='<div class="meta">共通する出題対象地域</div><div class="answerRegions">'+ans.map(r=>'<span class="answerChip">'+r+'　'+names[r]+'</span>').join("")+'</div>'+(ans.length>1?'<p class="note">このヒントだけでは一意に絞れない。表示された地域はすべて正解。</p>':"")
+}
+nextBtn.addEventListener("click",e=>{e.stopPropagation();renderQuestion()});countEl.addEventListener("click",e=>e.stopPropagation());countEl.addEventListener("change",renderQuestion);card.addEventListener("click",reveal);renderQuestion();
+</script>
+</body>
+</html>
